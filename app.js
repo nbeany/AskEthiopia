@@ -2,7 +2,7 @@ const mysql = require('mysql2');
 // const express = require('express');
 // const bodyParser = require('body-parser');
 // const cors = require('cors');
-// require('dotenv').config();
+require('dotenv').config();
 
 const dbconnection = mysql.createPool({
     host: process.env.DB_HOST,
@@ -10,4 +10,12 @@ const dbconnection = mysql.createPool({
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
     connectionLimit: 10
+});
+
+dbconnection.execute('SELECT 1 + 1 AS solution', (err, results) => {
+    if (err) {
+        console.error('Error executing query:', err);
+        return;
+    }
+    console.log('Query results:', results);
 });
