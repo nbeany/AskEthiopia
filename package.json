@@ -1,0 +1,20 @@
+{
+  "name": "askethiopia",
+  "version": "1.0.0",
+  "description": "A question and answer website for ethiopian community",
+  "homepage": "https://github.com/nbeany/AskEthiopia#readme",
+  "bugs": {
+    "url": "https://github.com/nbeany/AskEthiopia/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nbeany/AskEthiopia.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
