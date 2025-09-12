@@ -12,10 +12,12 @@ const dbconnection = mysql.createPool({
     connectionLimit: 10
 });
 
-dbconnection.execute('SELECT 1 + 1 AS solution', (err, results) => {
-    if (err) {
-        console.error('Error executing query:', err);
-        return;
-    }
-    console.log('Query results:', results);
-});
+// dbconnection.execute('SELECT 1 + 1 AS solution', (err, results) => {
+//     if (err) {
+//         console.error('Error executing query:', err);
+//         return;
+//     }
+//     console.log('Query results:', results);
+// });
+
+module.exports = dbconnection.promise;

@@ -1,18 +1,18 @@
 const express = require('express');
 const router = express.Router();
 
+// import user controller functions
+const { register, login, check } = require('../controller/userController');
+
 
 // register route
-router.post('/register', (req, res) => {
-    res.send('Register user');
-});
+router.post('/register', register);
+
 // login route
-router.post('/login', (req, res) => {
-    res.send('Login user');
-});
+router.post('/login', login);
+
 // check user
-router.get('/check', (req, res) => {
-    res.send('Check user');
-});
+router.get('/check', check);
+
 
 module.exports = router;
