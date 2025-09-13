@@ -1,5 +1,6 @@
 //db connection
 const db = require('../db/dbconfige');
+const bcrypt = require('bcryptjs');
 
 async function register(req, res) {
    const { username, password, firstname, lastname, email } = req.body;
@@ -11,12 +12,23 @@ async function register(req, res) {
     if (user.length > 0) {
         return res.status(400).json({ message: 'Username or email already exists' });
     }
-    if (password.length <= 8) {
-        return res.status(400).json({ message: 'Password must be at least 8 characters long' });
-    }
+   if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(password)) {
+    return res.status(400).json({
+        message: 'Password must be at least 8 characters long, contain uppercase, lowercase, number, and special character'
+    });
+}
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({
+        message: 'Invalid email format'
+    });
+}
+    const hashedPassword = await bcrypt.hash(password, 10);
+    // Store user in the database
+
+
 
     await db.query('INSERT INTO users (username, password, firstname, lastname, email) VALUES (?, ?, ?, ?, ?)',
-        [username, password, firstname, lastname, email]);
+        [username, hashedPassword, firstname, lastname, email]);
     return res.status(201).json({ message: 'User registered successfully' });
    }
     catch (error) {
