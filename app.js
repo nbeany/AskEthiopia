@@ -1,6 +1,12 @@
 const express = require('express');
 const port = process.env.PORT || 5000;
 const app = express();
+//db connection
+const db = require('./db/dbconfige');
+
+//middleware
+app.use(express.json());
+
 
 
 // user route middleware 
