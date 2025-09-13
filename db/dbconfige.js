@@ -20,4 +20,4 @@ const dbconnection = mysql.createPool({
 //     console.log('Query results:', results);
 // });
 
-module.exports = dbconnection.promise;
+module.exports = dbconnection.promise();
