@@ -9,7 +9,10 @@ async function register(req, res) {
    try {
     const [user] = await db.query('SELECT username,userid FROM users WHERE username = ? or email = ?', [username, email]);
     if (user.length > 0) {
-        return res.status(409).json({ message: 'Username or email already exists' });
+        return res.status(400).json({ message: 'Username or email already exists' });
+    }
+    if (password.length <= 8) {
+        return res.status(400).json({ message: 'Password must be at least 8 characters long' });
     }
 
     await db.query('INSERT INTO users (username, password, firstname, lastname, email) VALUES (?, ?, ?, ?, ?)',
