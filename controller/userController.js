@@ -36,7 +36,24 @@ async function register(req, res) {
     }
 }
 async function login(req, res) {
-    res.send('Login user');
+   const { email, password } = req.body;
+   if (!email || !password) {
+       return res.status(StatusCode.BAD_REQUEST).json({ message: 'Email and password are required' });
+   }
+//    try {
+//        const [user] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
+//        if (user.length === 0) {
+//            return res.status(StatusCode.UNAUTHORIZED).json({ message: 'Invalid email or password' });
+//        }
+//        const isMatch = await bcrypt.compare(password, user[0].password);
+//        if (!isMatch) {
+//            return res.status(StatusCode.UNAUTHORIZED).json({ message: 'Invalid email or password' });
+//        }
+//        return res.status(StatusCode.OK).json({ message: 'Login successful' });
+//    } catch (error) {
+//        console.log(error.message);
+//        return res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: 'Server error' });
+//    }
 }
 
 async function check(req, res) {
