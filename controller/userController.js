@@ -54,6 +54,7 @@ async function login(req, res) {
 
 async function check(req, res) {
     res.send('Check user');
+    
 }
 
 module.exports = {
