@@ -42,10 +42,9 @@ async function login(req, res) {
    }
    try {
        const [user] = await db.query('SELECT username,userid, password FROM users WHERE email = ?', [email]);
-       return res.status(StatusCodes.OK).json({ user: user });
-    //    if (user.length == 0) {
-    //        return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid email or password' });
-    //    }
+        if (user.length == 0) {
+           return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid email or password' });
+       }
       
    } catch (error) {
        console.log(error.message);
