@@ -45,6 +45,9 @@ async function login(req, res) {
         if (user.length == 0) {
            return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid email or password' });
        }
+       else {
+        res.json({ message: "login "})
+       }
       
    } catch (error) {
        console.log(error.message);
