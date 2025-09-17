@@ -50,7 +50,7 @@ async function login(req, res) {
         if (!ismatch){
             return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid email or password' });
         }
-        
+        return res.json({user})
       
    } catch (error) {
        console.log(error.message);
