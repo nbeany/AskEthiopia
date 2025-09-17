@@ -45,9 +45,12 @@ async function login(req, res) {
         if (user.length == 0) {
            return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid email or password' });
        }
-       else {
-        res.json({ message: "login "})
-       }
+        // compare password
+        const ismatch = await bcrypt.compare(password, user[0].password);
+        if (!ismatch){
+            return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid email or password' });
+        }
+        
       
    } catch (error) {
        console.log(error.message);
