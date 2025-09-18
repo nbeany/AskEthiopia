@@ -52,14 +52,10 @@ async function login(req, res) {
         }
         const userid = user[0].userid;
         const username = user[0].username;
-        jwt.sign({ userid, username }, process.env.JWT_SECRET, { expiresIn: '1h' }, (err, token) => {
-            if (err) {
-                console.log(err);
-                return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Server error' });
-            }
-            res.json({ token });
-        });
-        
+        const token = jwt.sign({ userid, username }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        res.json({ token });
+       
+
    } catch (error) {
        console.log(error.message);
        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Server error' });
