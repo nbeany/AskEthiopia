@@ -2,7 +2,7 @@
 const db = require('../db/dbconfige');
 const bcrypt = require('bcryptjs');
 const {StatusCodes} = require('http-status-codes');
-
+const jwt = require('jsonwebtoken');
 async function register(req, res) {
    const { username, password, firstname, lastname, email } = req.body;
    if (!username || !password || !firstname || !lastname || !email) {
@@ -50,7 +50,9 @@ async function login(req, res) {
         if (!ismatch){
             return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid email or password' });
         }
-        return res.json({user})
+        const userid = user[0].userid;
+        const username = user[0].username;
+        
       
    } catch (error) {
        console.log(error.message);
