@@ -12,3 +12,4 @@ async function authMiddleware(req, res, next) {
         return res.status(StatusCodes.UNAUTHORIZED).json({ message: 'Authentication invalid' });
     }
 }
+module.exports = authMiddleware;
