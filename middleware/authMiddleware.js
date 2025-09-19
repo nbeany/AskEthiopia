@@ -6,8 +6,9 @@ async function authMiddleware(req, res, next) {
         return res.status(StatusCodes.UNAUTHORIZED).json({ message: 'Authentication invalid' });
     }
     try {
-       const data = jwt.verify(authHeader, process.env.JWT_SECRET);
-       return res.status(StatusCodes.OK).json({msg:'Authentication successful', data });
+       const { userid, username } = jwt.verify(authHeader, process.env.JWT_SECRET);
+         req.user = { userid, username };
+    next();
     } catch (error) {
         return res.status(StatusCodes.UNAUTHORIZED).json({ message: 'Authentication invalid' });
     }

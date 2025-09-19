@@ -63,8 +63,9 @@ async function login(req, res) {
 }
 
 async function check(req, res) {
-    res.send('Check user');
-    
+    const userid = req.user.userid;
+    const username = req.user.username;
+    return res.status(StatusCodes.OK).json({ message: 'User is authenticated', user: { userid, username } });
 }
 
 module.exports = {
