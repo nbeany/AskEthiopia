@@ -12,7 +12,7 @@ router.post('/register', register);
 router.post('/login', login);
 
 // check user
-router.get('/check', check);
+router.get('/check', authMiddleware, check);
 
 
 module.exports = router;
