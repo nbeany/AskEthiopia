@@ -34,8 +34,17 @@ exports.login = async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
-    res.json({ token });
+
+    // Send both token and user to match frontend expectations
+    res.json({ token, user: {
+      userid: user.userid,
+      username: user.username,
+      email: user.email,
+      firstname: user.firstname,
+      lastname: user.lastname
+    }});
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 };
+
