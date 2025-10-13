@@ -1,160 +1,86 @@
 import { useState } from 'react';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { User, Edit, Trash2, Save, X } from 'lucide-react';
+import { User, Edit2, Trash2, Check, X } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import { answersApi } from '@/services/api';
-import { toast } from '@/hooks/use-toast';
-import { answerSchema } from '@/lib/validations';
 
 interface AnswerCardProps {
-  answer: {
-    answerid: string;
-    answer: string;
-    username: string;
-    created_at: string;
-    userid: string;
-  };
-  onUpdate: () => void;
+  answerid: string;
+  answer: string;
+  username: string;
+  userid: string;
+  onUpdate: (answerid: string, answer: string) => Promise<void>;
+  onDelete: (answerid: string) => Promise<void>;
 }
 
-const AnswerCard = ({ answer, onUpdate }: AnswerCardProps) => {
+const AnswerCard = ({ answerid, answer, username, userid, onUpdate, onDelete }: AnswerCardProps) => {
   const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
-  const [editedAnswer, setEditedAnswer] = useState(answer.answer);
-  const [editError, setEditError] = useState('');
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  // SECURITY NOTE: Ownership check below is for UI only.
-  // Backend MUST verify ownership using JWT token before allowing modifications.
-  // Never trust client-side authorization - treat this as cosmetic only.
-  const isOwner = user?.id === answer.userid;
+  const [editedAnswer, setEditedAnswer] = useState(answer);
+  const isAuthor = user?.userid === userid;
 
   const handleUpdate = async () => {
-    setEditError('');
-    
-    // Validate answer
-    const validationResult = answerSchema.safeParse({ answer: editedAnswer });
-    if (!validationResult.success) {
-      setEditError(validationResult.error.errors[0].message);
-      return;
-    }
-
-    try {
-      await answersApi.update(answer.answerid, { 
-        answer: validationResult.data.answer 
-      });
-      toast({
-        title: 'Answer updated',
-        description: 'Your answer has been updated successfully',
-      });
-      setIsEditing(false);
-      onUpdate();
-    } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Failed to update',
-        description: 'Could not update your answer',
-      });
-    }
+    await onUpdate(answerid, editedAnswer);
+    setIsEditing(false);
   };
 
-  const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this answer?')) return;
-    
-    setIsDeleting(true);
-    try {
-      await answersApi.delete(answer.answerid);
-      toast({
-        title: 'Answer deleted',
-        description: 'Your answer has been removed',
-      });
-      onUpdate();
-    } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Failed to delete',
-        description: 'Could not delete your answer',
-      });
-      setIsDeleting(false);
-    }
+  const handleCancel = () => {
+    setEditedAnswer(answer);
+    setIsEditing(false);
   };
 
   return (
-    <Card className="p-6">
-      <div className="space-y-4">
+    <Card className="bg-muted/50">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <User className="h-4 w-4" />
+            <span className="font-medium">{username}</span>
+          </div>
+          {isAuthor && !isEditing && (
+            <div className="flex gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsEditing(true)}
+              >
+                <Edit2 className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onDelete(answerid)}
+              >
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            </div>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent>
         {isEditing ? (
           <div className="space-y-3">
             <Textarea
               value={editedAnswer}
               onChange={(e) => setEditedAnswer(e.target.value)}
-              rows={5}
-              maxLength={5000}
-              className={`resize-none ${editError ? 'border-destructive' : ''}`}
+              className="min-h-[100px]"
             />
-            {editError && (
-              <p className="text-sm text-destructive">{editError}</p>
-            )}
             <div className="flex gap-2">
-              <Button onClick={handleUpdate} size="sm" className="gap-2">
-                <Save className="h-4 w-4" />
+              <Button size="sm" onClick={handleUpdate}>
+                <Check className="h-4 w-4 mr-2" />
                 Save
               </Button>
-              <Button 
-                onClick={() => {
-                  setIsEditing(false);
-                  setEditedAnswer(answer.answer);
-                  setEditError('');
-                }} 
-                variant="outline" 
-                size="sm"
-                className="gap-2"
-              >
-                <X className="h-4 w-4" />
+              <Button size="sm" variant="outline" onClick={handleCancel}>
+                <X className="h-4 w-4 mr-2" />
                 Cancel
               </Button>
             </div>
           </div>
         ) : (
-          <>
-            <p className="text-foreground whitespace-pre-wrap">{answer.answer}</p>
-            
-            <div className="flex items-center justify-between pt-2 border-t">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <User className="h-4 w-4" />
-                <span>{answer.username}</span>
-                <span>•</span>
-                <time>{new Date(answer.created_at).toLocaleDateString()}</time>
-              </div>
-              
-              {isOwner && (
-                <div className="flex gap-2">
-                  <Button 
-                    onClick={() => setIsEditing(true)} 
-                    variant="ghost" 
-                    size="sm"
-                    className="gap-2"
-                  >
-                    <Edit className="h-4 w-4" />
-                    Edit
-                  </Button>
-                  <Button 
-                    onClick={handleDelete}
-                    disabled={isDeleting}
-                    variant="ghost" 
-                    size="sm"
-                    className="gap-2 text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    Delete
-                  </Button>
-                </div>
-              )}
-            </div>
-          </>
+          <p className="text-foreground whitespace-pre-wrap">{answer}</p>
         )}
-      </div>
+      </CardContent>
     </Card>
   );
 };

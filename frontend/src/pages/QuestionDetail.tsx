@@ -1,16 +1,15 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { useParams } from 'react-router-dom';
+import { questionsAPI, answersAPI } from '@/services/api';
+import { useAuth } from '@/context/AuthContext';
 import Navbar from '@/components/Navbar';
 import AnswerCard from '@/components/AnswerCard';
-import { questionsApi, answersApi } from '@/services/api';
-import { useAuth } from '@/context/AuthContext';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
-import { User, Edit, Trash2, ArrowLeft } from 'lucide-react';
-import { answerSchema } from '@/lib/validations';
+import { User } from 'lucide-react';
 
 interface Question {
   questionid: string;
@@ -19,7 +18,6 @@ interface Question {
   tag: string;
   username: string;
   userid: string;
-  created_at: string;
 }
 
 interface Answer {
@@ -27,108 +25,109 @@ interface Answer {
   answer: string;
   username: string;
   userid: string;
-  created_at: string;
 }
 
 const QuestionDetail = () => {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const { user } = useAuth();
+  const { questionid } = useParams<{ questionid: string }>();
+  const { isAuthenticated } = useAuth();
   const [question, setQuestion] = useState<Question | null>(null);
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [newAnswer, setNewAnswer] = useState('');
-  const [answerError, setAnswerError] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   const fetchQuestionAndAnswers = async () => {
-    if (!id) return;
+    if (!questionid) return;
     
     try {
-      setIsLoading(true);
-      const [questionRes, answersRes] = await Promise.all([
-        questionsApi.getById(id),
-        answersApi.getByQuestion(id)
+      setLoading(true);
+      const [questionResponse, answersResponse] = await Promise.all([
+        questionsAPI.getById(questionid),
+        answersAPI.getByQuestionId(questionid),
       ]);
-      
-      setQuestion(questionRes.data);
-      setAnswers(answersRes.data);
-    } catch (error) {
+      setQuestion(questionResponse.data);
+      setAnswers(answersResponse.data);
+    } catch (error: any) {
       toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to load question',
+        title: "Error",
+        description: "Failed to fetch question details",
+        variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchQuestionAndAnswers();
-  }, [id]);
+  }, [questionid]);
 
   const handleSubmitAnswer = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!id) return;
-    
-    setAnswerError('');
-    
-    // Validate answer
-    const validationResult = answerSchema.safeParse({ answer: newAnswer });
-    if (!validationResult.success) {
-      setAnswerError(validationResult.error.errors[0].message);
-      return;
-    }
+    if (!questionid || !newAnswer.trim()) return;
 
-    setIsSubmitting(true);
     try {
-      await answersApi.create({ 
-        questionid: id, 
-        answer: validationResult.data.answer 
-      });
-      toast({
-        title: 'Answer posted',
-        description: 'Your answer has been added successfully',
-      });
+      setSubmitting(true);
+      await answersAPI.create({ questionid, answer: newAnswer });
       setNewAnswer('');
-      fetchQuestionAndAnswers();
-    } catch (error) {
+      await fetchQuestionAndAnswers();
       toast({
-        variant: 'destructive',
-        title: 'Failed to post answer',
-        description: 'Please try again',
+        title: "Success",
+        description: "Your answer has been posted",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "Failed to post answer",
+        variant: "destructive",
       });
     } finally {
-      setIsSubmitting(false);
+      setSubmitting(false);
     }
   };
 
-  const handleDeleteQuestion = async () => {
-    if (!id || !confirm('Are you sure you want to delete this question?')) return;
-
+  const handleUpdateAnswer = async (answerid: string, answer: string) => {
     try {
-      await questionsApi.delete(id);
+      await answersAPI.update(answerid, { answer });
+      await fetchQuestionAndAnswers();
       toast({
-        title: 'Question deleted',
-        description: 'The question has been removed',
+        title: "Success",
+        description: "Answer updated",
       });
-      navigate('/');
-    } catch (error) {
+    } catch (error: any) {
       toast({
-        variant: 'destructive',
-        title: 'Failed to delete',
-        description: 'Could not delete the question',
+        title: "Error",
+        description: "Failed to update answer",
+        variant: "destructive",
       });
     }
   };
 
-  if (isLoading) {
+  const handleDeleteAnswer = async (answerid: string) => {
+    if (!confirm('Are you sure you want to delete this answer?')) return;
+    
+    try {
+      await answersAPI.delete(answerid);
+      await fetchQuestionAndAnswers();
+      toast({
+        title: "Success",
+        description: "Answer deleted",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to delete answer",
+        variant: "destructive",
+      });
+    }
+  };
+
+  if (loading) {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <div className="container py-8 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <div className="container mx-auto px-4 py-8">
+          <p className="text-center text-muted-foreground">Loading...</p>
         </div>
       </div>
     );
@@ -138,121 +137,79 @@ const QuestionDetail = () => {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <div className="container py-8 text-center">
-          <p className="text-muted-foreground">Question not found</p>
-          <Button onClick={() => navigate('/')} className="mt-4">
-            Go Home
-          </Button>
+        <div className="container mx-auto px-4 py-8">
+          <p className="text-center text-muted-foreground">Question not found</p>
         </div>
       </div>
     );
   }
 
-  // SECURITY NOTE: Ownership check below is for UI only.
-  // Backend MUST verify ownership using JWT token before allowing modifications.
-  // Never trust client-side authorization - treat this as cosmetic only.
-  const isOwner = user?.id === question.userid;
-
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      
-      <main className="container py-8 space-y-8 max-w-4xl">
-        <Button variant="ghost" onClick={() => navigate('/')} className="gap-2">
-          <ArrowLeft className="h-4 w-4" />
-          Back to questions
-        </Button>
-
-        {/* Question */}
-        <Card className="p-8 space-y-6">
-          <div className="space-y-4">
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <Card className="mb-8 animate-fade-in">
+          <CardHeader>
             <div className="flex items-start justify-between gap-4">
-              <h1 className="text-3xl font-bold">{question.title}</h1>
-              <Badge>{question.tag}</Badge>
+              <CardTitle className="text-3xl font-bold">{question.title}</CardTitle>
+              <Badge className="bg-tag text-tag-foreground shrink-0">{question.tag}</Badge>
             </div>
-            
-            <p className="text-foreground text-lg whitespace-pre-wrap">{question.description}</p>
-            
-            <div className="flex items-center justify-between pt-4 border-t">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <User className="h-4 w-4" />
-                <span>{question.username}</span>
-                <span>•</span>
-                <time>{new Date(question.created_at).toLocaleDateString()}</time>
-              </div>
-              
-              {isOwner && (
-                <div className="flex gap-2">
-                  <Button 
-                    onClick={() => navigate(`/edit-question/${question.questionid}`)}
-                    variant="outline"
-                    size="sm"
-                    className="gap-2"
-                  >
-                    <Edit className="h-4 w-4" />
-                    Edit
-                  </Button>
-                  <Button 
-                    onClick={handleDeleteQuestion}
-                    variant="outline"
-                    size="sm"
-                    className="gap-2 text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    Delete
-                  </Button>
-                </div>
-              )}
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
+              <User className="h-4 w-4" />
+              <span>Asked by {question.username}</span>
             </div>
-          </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-foreground whitespace-pre-wrap">{question.description}</p>
+          </CardContent>
         </Card>
 
-        {/* Answers Section */}
-        <div className="space-y-4">
-          <h2 className="text-2xl font-bold">
+        <div className="mb-6">
+          <h2 className="text-2xl font-semibold mb-4">
             {answers.length} {answers.length === 1 ? 'Answer' : 'Answers'}
           </h2>
-          
           <div className="space-y-4">
             {answers.map((answer) => (
-              <AnswerCard 
-                key={answer.answerid} 
-                answer={answer} 
-                onUpdate={fetchQuestionAndAnswers}
+              <AnswerCard
+                key={answer.answerid}
+                {...answer}
+                onUpdate={handleUpdateAnswer}
+                onDelete={handleDeleteAnswer}
               />
             ))}
           </div>
         </div>
 
-        {/* Answer Form */}
-        {user ? (
-          <Card className="p-6">
-            <form onSubmit={handleSubmitAnswer} className="space-y-4">
-              <h3 className="text-xl font-semibold">Your Answer</h3>
-              <Textarea
-                placeholder="Write your answer here..."
-                value={newAnswer}
-                onChange={(e) => setNewAnswer(e.target.value)}
-                rows={8}
-                required
-                maxLength={5000}
-                className={`resize-none ${answerError ? 'border-destructive' : ''}`}
-              />
-              {answerError && (
-                <p className="text-sm text-destructive">{answerError}</p>
-              )}
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Posting...' : 'Post Answer'}
-              </Button>
-            </form>
+        {isAuthenticated ? (
+          <Card>
+            <CardHeader>
+              <CardTitle>Your Answer</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmitAnswer} className="space-y-4">
+                <Textarea
+                  placeholder="Write your answer here..."
+                  value={newAnswer}
+                  onChange={(e) => setNewAnswer(e.target.value)}
+                  className="min-h-[150px]"
+                  required
+                />
+                <Button type="submit" disabled={submitting}>
+                  {submitting ? 'Posting...' : 'Post Answer'}
+                </Button>
+              </form>
+            </CardContent>
           </Card>
         ) : (
-          <Card className="p-6 text-center">
-            <p className="text-muted-foreground mb-4">Please log in to post an answer</p>
-            <Button onClick={() => navigate('/login')}>Login</Button>
+          <Card>
+            <CardContent className="py-8 text-center">
+              <p className="text-muted-foreground">
+                Please <a href="/login" className="text-primary hover:underline">login</a> to post an answer
+              </p>
+            </CardContent>
           </Card>
         )}
-      </main>
+      </div>
     </div>
   );
 };

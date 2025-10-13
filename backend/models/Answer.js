@@ -4,16 +4,46 @@ const User = require("./User");
 const Question = require("./Question");
 
 const Answer = sequelize.define("Answer", {
-  answerid: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-  userid: { type: DataTypes.INTEGER, allowNull: false },
-  questionid: { type: DataTypes.STRING, allowNull: false },
-  answer: { type: DataTypes.TEXT, allowNull: false },
+  answerid: {
+    type: DataTypes.INTEGER,
+    autoIncrement: true,
+    primaryKey: true,
+  },
+  userid: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+  questionid: {
+    type: DataTypes.UUID, // ✅ Must match Question’s UUID type
+    allowNull: false,
+  },
+  answer: {
+    type: DataTypes.TEXT,
+    allowNull: false,
+  },
 });
 
-Answer.belongsTo(User, { foreignKey: "userid" });
-User.hasMany(Answer, { foreignKey: "userid" });
+// ✅ Relationships
+Answer.belongsTo(User, {
+  foreignKey: "userid",
+  onDelete: "CASCADE", // delete answers if user is deleted
+});
+User.hasMany(Answer, {
+  foreignKey: "userid",
+  onDelete: "CASCADE",
+});
 
-Answer.belongsTo(Question, { foreignKey: "questionid", targetKey: "questionid" });
-Question.hasMany(Answer, { foreignKey: "questionid", sourceKey: "questionid" });
+Answer.belongsTo(Question, {
+  foreignKey: "questionid",
+  targetKey: "questionid",
+  onDelete: "CASCADE", // 
+});
+Question.hasMany(Answer, {
+  foreignKey: "questionid",
+  sourceKey: "questionid",
+  onDelete: "CASCADE",
+});
 
 module.exports = Answer;
+
+

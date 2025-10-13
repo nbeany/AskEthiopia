@@ -1,115 +1,77 @@
-import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card } from '@/components/ui/card';
-import { useAuth } from '@/context/AuthContext';
-import { MessageSquare, AlertCircle } from 'lucide-react';
-import { useRateLimit } from '@/hooks/useRateLimit';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { MessageSquare } from 'lucide-react';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const { login, user } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
   const navigate = useNavigate();
-  
-  // Rate limiting: 5 attempts per 15 minutes, then 5 minute lockout
-  const { checkLimit, recordAttempt, reset } = useRateLimit({
-    maxAttempts: 5,
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    lockoutMs: 5 * 60 * 1000, // 5 minute lockout
-  });
-
-  const limitCheck = checkLimit();
-
-  useEffect(() => {
-    if (user) {
-      navigate('/');
-    }
-  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Check rate limit
-    if (!limitCheck.allowed) {
-      return;
-    }
-    
-    setIsLoading(true);
-    recordAttempt();
-    
+    setLoading(true);
     try {
       await login(email, password);
-      reset(); // Reset on successful login
+      navigate('/');
     } catch (error) {
-      // Error handled in context
+      console.error('Login error:', error);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5 p-4">
-      <Card className="w-full max-w-md p-8 space-y-6">
-        <div className="text-center space-y-2">
-          <div className="flex justify-center">
-            <div className="p-3 bg-primary/10 rounded-full">
-              <MessageSquare className="h-8 w-8 text-primary" />
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1 text-center">
+          <div className="flex justify-center mb-2">
+            <MessageSquare className="h-12 w-12 text-primary" />
+          </div>
+          <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
+          <CardDescription>Login to your DevForum account</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? 'Logging in...' : 'Login'}
+            </Button>
+          </form>
+          <div className="mt-4 text-center text-sm">
+            Don't have an account?{' '}
+            <Link to="/register" className="text-primary hover:underline font-medium">
+              Sign up
+            </Link>
           </div>
-          <h1 className="text-3xl font-bold">Welcome Back</h1>
-          <p className="text-muted-foreground">Login to continue to DevForum</p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {!limitCheck.allowed && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                Too many login attempts. Please wait {limitCheck.remainingTime} seconds before trying again.
-              </AlertDescription>
-            </Alert>
-          )}
-
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="your@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-
-          <Button type="submit" className="w-full" disabled={isLoading || !limitCheck.allowed}>
-            {isLoading ? 'Logging in...' : 'Login'}
-          </Button>
-        </form>
-
-        <div className="text-center text-sm">
-          <span className="text-muted-foreground">Don't have an account? </span>
-          <Link to="/register" className="text-primary hover:underline font-medium">
-            Sign up
-          </Link>
-        </div>
+        </CardContent>
       </Card>
     </div>
   );

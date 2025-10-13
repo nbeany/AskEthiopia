@@ -27,8 +27,8 @@ const Question = sequelize.define("Question", {
   },
 });
 
-// Relationships
+// ✅ Relationships
 Question.belongsTo(User, { foreignKey: "userid", onDelete: "CASCADE" });
-User.hasMany(Question, { foreignKey: "userid" });
+User.hasMany(Question, { foreignKey: "userid", onDelete: "CASCADE" });
 
 module.exports = Question;

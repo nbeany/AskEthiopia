@@ -1,14 +1,16 @@
 import axios from 'axios';
-import { API_BASE_URL } from '@/lib/config';
+
+// Configure your backend API URL here
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Request interceptor to add token
+// Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -35,37 +37,39 @@ api.interceptors.response.use(
   }
 );
 
+// Auth API
+export const authAPI = {
+  register: (data: { username: string; firstname: string; lastname: string; email: string; password: string }) =>
+    api.post('/auth/register', data),
+  login: (data: { email: string; password: string }) =>
+    api.post('/auth/login', data),
+};
+
 // Questions API
-export const questionsApi = {
-  getAll: (params?: { tag?: string; q?: string }) => 
+export const questionsAPI = {
+  getAll: (params?: { tag?: string; q?: string }) =>
     api.get('/questions', { params }),
-  
-  getById: (questionid: string) => 
+  getById: (questionid: string) =>
     api.get(`/questions/${questionid}`),
-  
-  create: (data: { title: string; description: string; tag: string; questionid?: string }) => 
+  create: (data: { title: string; description: string; tag: string }) =>
     api.post('/questions', data),
-  
-  update: (questionid: string, data: { title: string; description: string; tag: string }) => 
+  update: (questionid: string, data: { title: string; description: string; tag: string }) =>
     api.put(`/questions/${questionid}`, data),
-  
-  delete: (questionid: string) => 
-    api.delete(`/questions/${questionid}`),
+  delete: (questionid: string) =>
+    api.delete(`/questions/${questionid}`), 
 };
 
 // Answers API
-export const answersApi = {
-  create: (data: { questionid: string; answer: string }) => 
-    api.post('/answers', data),
-  
-  getByQuestion: (questionid: string) => 
+export const answersAPI = {
+  getByQuestionId: (questionid: string) =>
     api.get(`/answers/${questionid}`),
-  
-  update: (answerid: string, data: { answer: string }) => 
-    api.put(`/answers/id/${answerid}`, data),
-  
-  delete: (answerid: string) => 
-    api.delete(`/answers/id/${answerid}`),
+  create: (data: { questionid: string; answer: string }) =>
+    api.post('/answers', data),
+  update: (answerid: string, data: { answer: string }) =>
+    api.put(`/answers/${answerid}`, data), // ✅ remove /id/
+  delete: (answerid: string) =>
+    api.delete(`/answers/${answerid}`), // ✅ remove /id/
 };
+
 
 export default api;
