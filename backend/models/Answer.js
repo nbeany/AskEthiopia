@@ -6,7 +6,7 @@ const Question = require("./Question");
 const Answer = sequelize.define("Answer", {
   answerid: {
     type: DataTypes.UUID,
-    defaultValue: () => require("uuid").v4(),
+    defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
   },
   userid: {
