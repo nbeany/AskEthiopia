@@ -1,4 +1,5 @@
 const Question = require("../models/Question");
+const { Op } = require("sequelize");
 
 // Create
 exports.createQuestion = async (req, res) => {
@@ -19,7 +20,7 @@ exports.getAllQuestions = async (req, res) => {
     const where = {};
 
     if (tag) where.tag = tag;
-    if (q) where.title = { [Op.iLike]: `%${q}%` };
+    if (q) where.title = { [Op.like]: `%${q}%` };
 
     const questions = await Question.findAll({ where });
     res.json(questions);
