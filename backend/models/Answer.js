@@ -36,7 +36,7 @@ User.hasMany(Answer, {
 Answer.belongsTo(Question, {
   foreignKey: "questionid",
   targetKey: "questionid",
-  onDelete: "CASCADE", // 
+  onDelete: "CASCADE", 
 });
 Question.hasMany(Answer, {
   foreignKey: "questionid",
