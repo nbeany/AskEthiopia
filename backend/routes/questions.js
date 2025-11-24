@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const questionController = require("../controllers/questionController");
-const authMiddleware = require("../middleware/authMiddleware"); // ✅ import it
+const authMiddleware = require("../middleware/authMiddleware"); 
 
 // Public routes
 router.get("/", questionController.getAllQuestions);
