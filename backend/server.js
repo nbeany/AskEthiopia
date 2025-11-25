@@ -1,6 +1,5 @@
 const express = require("express");
 const cors = require("cors");
-const path = require("path");
 const { sequelize } = require("./models");
 
 const authRoutes = require("./routes/auth");
@@ -24,35 +23,6 @@ app.use(express.json());
 app.use("/auth", authRoutes);
 app.use("/questions", questionRoutes);
 app.use("/answers", answerRoutes);
-
-// Serve React static files
-const reactBuildPath = path.join(__dirname, "../frontend/build");
-app.use(express.static(reactBuildPath));
-
-// SPA fallback middleware (no path-to-regexp patterns used)
-// This middleware will serve index.html for GET requests that:
-//  - don't start with known API prefixes (auth/questions/answers)
-//  - don't point to a file with an extension (like .js, .css, .png)
-//  - accept HTML (so API JSON requests / XHR don't get HTML)
-app.use((req, res, next) => {
-  if (req.method !== "GET") return next();
-
-  const urlPath = req.path || req.originalUrl || "";
-  const isApi = urlPath.startsWith("/auth") || urlPath.startsWith("/questions") || urlPath.startsWith("/answers");
-  const hasExt = path.extname(urlPath) !== "";
-  const acceptHeader = (req.headers.accept || "");
-
-  if (isApi || hasExt) return next();
-
-  // Only serve the SPA for clients that accept HTML
-  if (acceptHeader.includes("text/html")) {
-    return res.sendFile(path.join(reactBuildPath, "index.html"), (err) => {
-      if (err) next(err);
-    });
-  }
-
-  return next();
-});
 
 // Port
 const PORT = process.env.PORT || 5000;
