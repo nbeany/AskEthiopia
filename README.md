@@ -231,16 +231,95 @@ The production build will be in the `frontend/dist` directory. You can preview i
 npm run preview
 ```
 
+## 🚀 Deployment to Render
+
+### Setting up MySQL Database on Render
+
+1. **Create a MySQL Database Service:**
+   - Go to your Render dashboard
+   - Click "New +" → "PostgreSQL" (Render also supports MySQL)
+   - Or use an external MySQL service like PlanetScale, AWS RDS, etc.
+
+2. **Get Database Connection Details:**
+   - Note down the following from your database service:
+     - Host
+     - Port (usually 3306)
+     - Database name
+     - Username
+     - Password
+   - Some services provide a `DATABASE_URL` connection string
+
+### Setting up Backend Service on Render
+
+1. **Create a Web Service:**
+   - Connect your GitHub repository
+   - Set the following:
+     - **Root Directory:** `backend`
+     - **Build Command:** `npm install`
+     - **Start Command:** `npm start`
+     - **Environment:** `Node`
+
+2. **Configure Environment Variables:**
+   Go to your service's "Environment" tab and add:
+
+   **Option 1: Using DATABASE_URL (Recommended if your provider gives you one)**
+   ```
+   DATABASE_URL=mysql://username:password@host:port/database_name
+   ```
+
+   **Option 2: Using Individual Variables**
+   ```
+   PORT=5000
+   DB_HOST=your_database_host
+   DB_PORT=3306
+   DB_USER=your_database_username
+   DB_PASS=your_database_password
+   DB_NAME=your_database_name
+   DB_DIALECT=mysql
+   JWT_SECRET=your_super_secret_jwt_key_here
+   NODE_ENV=production
+   ```
+
+3. **Important Notes:**
+   - Make sure your database is accessible from Render's servers
+   - If using Render's PostgreSQL, you'll need to change `DB_DIALECT` to `postgres` and update the connection accordingly
+   - The `JWT_SECRET` should be a strong, random string
+   - Render automatically sets `PORT`, but you can override it if needed
+
+4. **Troubleshooting:**
+   - If you see "ConnectionRefusedError", check:
+     - Database host and port are correct
+     - Database allows connections from Render's IP addresses
+     - Environment variables are set correctly in Render dashboard
+     - Database service is running and accessible
+
+### Setting up Frontend Service
+
+1. **Deploy to Vercel, Netlify, or Render:**
+   - Connect your repository
+   - Set build directory to `frontend`
+   - Set build command to `npm run build`
+   - Set output directory to `dist`
+
+2. **Environment Variables:**
+   ```
+   VITE_API_URL=https://your-backend-service.onrender.com
+   ```
+
 ## 🔒 Environment Variables
 
 ### Backend `.env`
 - `PORT` - Server port (default: 5000)
-- `DB_HOST` - MySQL host
-- `DB_USER` - MySQL username
-- `DB_PASS` - MySQL password
-- `DB_NAME` - Database name
-- `DB_DIALECT` - Database dialect (mysql)
+- `DATABASE_URL` - Full database connection string (optional, takes precedence if set)
+  - Format: `mysql://username:password@host:port/database_name`
+- `DB_HOST` - MySQL host (required if DATABASE_URL not set)
+- `DB_PORT` - MySQL port (default: 3306, required if DATABASE_URL not set)
+- `DB_USER` - MySQL username (required if DATABASE_URL not set)
+- `DB_PASS` - MySQL password (required if DATABASE_URL not set)
+- `DB_NAME` - Database name (required if DATABASE_URL not set)
+- `DB_DIALECT` - Database dialect (default: mysql)
 - `JWT_SECRET` - Secret key for JWT tokens
+- `NODE_ENV` - Environment mode (production/development, affects SSL settings)
 
 ### Frontend `.env`
 - `VITE_API_URL` - Backend API URL
